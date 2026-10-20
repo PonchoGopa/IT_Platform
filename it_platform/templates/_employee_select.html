@@ -1,0 +1,9 @@
+{% macro employee_select(name, employees, selected='', required=false, error=none, current=none) %}
+<select name="{{ name }}" id="{{ name }}" {% if required %}required{% endif %} {% if error %}disabled{% endif %}>
+<option value="">{{ 'Selecciona un empleado' if required else 'Sin empleado: cuenta personal de quien registra' }}</option>
+{% for employee in employees %}<option value="{{ employee.employee_no }}" {% if selected|string == employee.employee_no|string %}selected{% endif %}>{{ employee.employee_no }} — {{ employee.name }}</option>{% endfor %}
+{% if current and current|string not in employees|map(attribute='employee_no')|map('string')|list %}<option value="{{ current }}" {% if selected|string == current|string %}selected{% endif %}>{{ current }} — Propietario actual (fuera del directorio disponible)</option>{% endif %}
+</select>
+{% if error %}<input type="hidden" name="{{ name }}" value="{{ selected }}">{% endif %}
+{% if error %}<span role="alert" class="error">{{ error }} Intenta nuevamente antes de cambiar el empleado.</span>{% elif not employees %}<span class="muted">No hay empleados activos disponibles.</span>{% endif %}
+{% endmacro %}

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<p class="eyebrow">SOPORTE DE IT</p><h1>Crear ticket</h1><p class="muted">Describe el problema y su impacto. Evita incluir contraseñas, PIN o códigos de acceso.</p>
+<form method="post" class="card form-grid"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<label class="wide">Asunto *<input name="subject" required maxlength="160" value="{{ request.form.get('subject', '') }}"></label>
+<label>Categoría *<select name="category">{% for category in ticket_categories %}<option {% if request.form.get('category') == category %}selected{% endif %}>{{ category }}</option>{% endfor %}</select></label>
+<label>Prioridad *<select name="priority">{% for key, label in ticket_priorities.items() %}<option value="{{ key }}" {% if request.form.get('priority', 'normal') == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+<label class="wide">Equipo relacionado<select name="asset_id"><option value="">Sin equipo específico</option>{% for asset in assets %}<option value="{{ asset.id }}" {% if request.form.get('asset_id') == asset.id|string %}selected{% endif %}>{{ asset.code }} · {{ asset.brand }} {{ asset.model }}</option>{% endfor %}</select></label>
+<label class="wide">Descripción *<textarea name="description" required rows="7" maxlength="10000">{{ request.form.get('description', '') }}</textarea></label>
+<div><button>Enviar solicitud</button></div></form>
+{% endblock %}

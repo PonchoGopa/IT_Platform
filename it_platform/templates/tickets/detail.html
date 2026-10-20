@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<p class="eyebrow">{{ ticket.folio }}</p><h1>{{ ticket.subject }}</h1>
+<section class="card"><span class="badge">{{ ticket_statuses[ticket.status] }}</span><p>{{ ticket.category }} · Prioridad {{ ticket_priorities[ticket.priority] }} · Solicitante {{ ticket.requester.username }}</p><p class="muted">Creado: {{ ticket.created_at }} UTC · Responsable: {{ ticket.assigned_to.username if ticket.assigned_to else 'Sin asignar' }}</p>
+{% if ticket.asset %}<p>Equipo: {{ ticket.asset.code }}</p>{% endif %}<p class="pre">{{ ticket.description }}</p>
+{% if ticket.solution %}<h2>Solución</h2><p class="pre">{{ ticket.solution }}</p>{% endif %}</section>
+{% if is_it %}<section class="card"><h2>Gestión de IT</h2><form method="post" class="form-grid" action="{{ url_for('tickets.manage', ticket_id=ticket.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="revision" value="{{ ticket.revision }}">
+<label>Responsable<select name="assigned_to_id"><option value="">Sin asignar</option>{% for user in technicians %}<option value="{{ user.id }}" {% if ticket.assigned_to_id == user.id %}selected{% endif %}>{{ user.username }}</option>{% endfor %}</select></label>
+<label>Prioridad<select name="priority">{% for key, label in ticket_priorities.items() %}<option value="{{ key }}" {% if ticket.priority == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+<label>Estado<select name="status">{% for key in allowed_statuses %}<option value="{{ key }}" {% if ticket.status == key %}selected{% endif %}>{{ ticket_statuses[key] }}</option>{% endfor %}</select></label>
+<label class="wide">Solución<textarea name="solution" rows="4" maxlength="10000">{{ ticket.solution }}</textarea></label><div><button>Guardar seguimiento</button></div></form></section>{% endif %}
+<section class="card"><h2>Conversación</h2>{% for comment in comments %}<article class="ticket-comment {{ 'internal-note' if comment.internal else '' }}"><strong>{{ comment.author.username }}{% if comment.internal %} · Nota interna de IT{% endif %}</strong><p class="muted">{{ comment.created_at }} UTC</p><p class="pre">{{ comment.body }}</p></article>{% else %}<p class="muted">Todavía no hay comentarios.</p>{% endfor %}
+{% if ticket.status != 'closed' %}<form method="post" action="{{ url_for('tickets.comment', ticket_id=ticket.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><label>Agregar comentario<textarea name="body" required rows="4" maxlength="10000"></textarea></label>{% if is_it %}<label class="checkbox"><input type="checkbox" name="internal" value="1"> Nota interna, visible únicamente para IT</label>{% endif %}<button>Agregar comentario</button></form>{% else %}<p class="muted">Ticket cerrado. Solicita a IT su reapertura si necesitas continuar.</p>{% endif %}</section>
+<section class="card"><h2>Historial de seguimiento</h2>{% for event in events %}<p><strong>{{ event.message }}</strong><br><span class="muted">{{ event.actor.username }} · {{ event.created_at }} UTC</span></p>{% endfor %}</section>
+{% endblock %}
