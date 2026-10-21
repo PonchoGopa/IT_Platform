@@ -33,6 +33,23 @@ class Asset(db.Model):
     created_at = db.Column(db.DateTime, default=now, nullable=False)
 
 
+class AssetService(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    asset_id = db.Column(db.Integer, db.ForeignKey("asset.id"), nullable=False, index=True)
+    kind = db.Column(db.String(20), nullable=False)
+    performed_on = db.Column(db.Date, nullable=False)
+    service_type = db.Column(db.String(30), nullable=False)
+    responsible = db.Column(db.String(120), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    result = db.Column(db.String(20), nullable=False)
+    location = db.Column(db.String(500), nullable=False, default="")
+    restoration = db.Column(db.String(20), nullable=False, default="not_tested")
+    next_due_on = db.Column(db.Date)
+    created_by = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=now, nullable=False)
+    author = db.relationship(User)
+
+
 class Assignment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     asset_id = db.Column(db.Integer, db.ForeignKey("asset.id"), nullable=False)

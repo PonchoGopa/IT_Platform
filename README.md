@@ -98,3 +98,26 @@ Disponible desde Credenciales y desde el expediente de un equipo. Cifrado autent
 ## Selección de empleados
 
 Los formularios de asignación de equipo y propietario de credencial muestran listas con número y nombre completo de todos los empleados activos de RH, ordenadas por nombre. La página del directorio conserva su límite de búsqueda de 100 resultados. El servidor vuelve a validar el empleado al guardar. Los usuarios sin permiso global de bóveda no pueden escoger otro propietario. Si RH no responde, la asignación se deshabilita y el propietario existente de una credencial se conserva. Un propietario anterior que ya no figura entre activos se identifica como actual sin ofrecerlo para nuevas asignaciones. No hay cambios de tablas.
+
+
+## Mantenimientos y respaldos por equipo
+
+En la ficha de cada equipo, administradores y técnicos pueden registrar y consultar
+mantenimientos preventivos/correctivos y respaldos completos/incrementales/diferenciales.
+Cada registro conserva fecha realizada, responsable o proveedor, actividades o información
+respaldada, resultado, próxima fecha opcional, usuario de captura y fecha de captura UTC.
+Los respaldos incluyen ubicación y resultado de la prueba de restauración. Se registran
+actividades realizadas; la fecha realizada no admite fechas futuras. La próxima fecha debe
+ser posterior a la realizada. Los registros se agregan al historial sin editar ni borrar.
+Los historiales y las rutas de respaldo son visibles únicamente para IT.
+
+Para actualizar una instalación existente, detener el servicio y ejecutar desde la carpeta
+del proyecto con su configuración habitual:
+
+```powershell
+.\.venv\Scripts\python.exe -m flask --app wsgi init-db
+```
+
+Este comando crea la tabla nueva `asset_service` y conserva las tablas y datos existentes.
+Después reiniciar el servicio. No requiere paquetes adicionales. Registrar un respaldo
+no copia archivos ni ejecuta respaldos: documenta la actividad que IT realizó.

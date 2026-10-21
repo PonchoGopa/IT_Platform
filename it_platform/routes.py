@@ -3,7 +3,7 @@ from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from .auth import require_roles
 from .employees import DirectoryUnavailable, employee_options, lookup
-from .models import Asset, Assignment, Audit, Ticket, User, audit, db, now
+from .models import Asset, AssetService, Assignment, Audit, Ticket, User, audit, db, now
 
 bp = Blueprint("main", __name__)
 CATEGORIES = ["Computadora", "Laptop", "Monitor", "Impresora", "Tablet", "Red", "Otro"]
@@ -117,9 +117,12 @@ def asset_detail(asset_id):
     if g.user.role == "requester":
         tickets_query = tickets_query.where(Ticket.requester_id == g.user.id)
     related_tickets = db.session.scalars(tickets_query.order_by(Ticket.id.desc()).limit(50)).all()
+    services = db.session.scalars(db.select(AssetService).where(AssetService.asset_id == asset.id)
+        .order_by(AssetService.performed_on.desc(), AssetService.id.desc())).all() if g.user.role in ("admin", "technician") else []
     employees, employee_error = employee_options() if g.user.role in ("admin", "technician") and asset.status == "available" else ([], None)
     return render_template("asset_detail.html", asset=asset, history=history,
-                           related_tickets=related_tickets, employees=employees, employee_error=employee_error)
+                           related_tickets=related_tickets, employees=employees, employee_error=employee_error,
+                           services=services)
 
 
 @bp.post("/assets/<int:asset_id>/assign")

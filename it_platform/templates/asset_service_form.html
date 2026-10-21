@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<p class="eyebrow">EXPEDIENTE DEL EQUIPO · {{ asset.code }}</p>
+<h1>Registrar {{ service_kinds[kind]|lower }}</h1>
+<form method="post" class="card form-grid">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label>Fecha realizada *<input type="date" name="performed_on" required max="{{ today }}" value="{{ request.form.get('performed_on', today) }}"></label>
+  <label>Tipo *<select name="service_type" required>{% for key, label in service_types[kind].items() %}<option value="{{ key }}" {% if request.form.get('service_type') == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+  <label>Responsable o proveedor *<input name="responsible" required maxlength="120" value="{{ request.form.get('responsible', g.user.username) }}"></label>
+  <label>Resultado *<select name="result" required>{% for key, label in service_results.items() %}<option value="{{ key }}" {% if request.form.get('result') == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+  <label class="wide">{{ 'Información respaldada y observaciones' if kind == 'backup' else 'Actividades realizadas y observaciones' }} *<textarea name="description" required maxlength="5000" rows="4">{{ request.form.get('description', '') }}</textarea></label>
+  {% if kind == 'backup' %}
+  <label>Ubicación del respaldo *<input name="location" required maxlength="500" placeholder="Ruta de red, disco o carpeta" value="{{ request.form.get('location', '') }}"></label>
+  <label>Prueba de restauración<select name="restoration">{% for key, label in service_restorations.items() %}<option value="{{ key }}" {% if request.form.get('restoration') == key %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+  {% endif %}
+  <label>Próxima fecha (opcional)<input type="date" name="next_due_on" value="{{ request.form.get('next_due_on', '') }}"></label>
+  <p class="muted wide">Registra únicamente la actividad y su ubicación. Guarda las contraseñas en la bóveda. El registro se conservará en el historial.</p>
+  <div class="wide"><button>Guardar registro</button> <a href="{{ url_for('main.asset_detail', asset_id=asset.id) }}">Cancelar</a></div>
+</form>
+{% endblock %}

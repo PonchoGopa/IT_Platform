@@ -1,0 +1,19 @@
+{% if is_it %}
+{% for kind, title in [('maintenance', 'Mantenimientos'), ('backup', 'Respaldos')] %}
+<section class="card table">
+  <header><h2>{{ title }}</h2><a class="button" href="{{ url_for('asset_services.new', asset_id=asset.id, kind=kind) }}">Registrar {{ service_kinds[kind]|lower }}</a></header>
+  <table>
+    <tr><th>Fecha / tipo</th><th>Responsable / resultado</th><th>Detalle</th><th>Próxima fecha</th><th>Capturado por (UTC)</th></tr>
+    {% for row in services if row.kind == kind %}
+    <tr>
+      <td>{{ row.performed_on }}<br>{{ service_types[kind][row.service_type] }}</td>
+      <td>{{ row.responsible }}<br><span class="badge">{{ service_results[row.result] }}</span></td>
+      <td><p class="pre">{{ row.description }}</p>{% if kind == 'backup' %}<p class="pre">Ubicación: {{ row.location }}</p><p>{{ service_restorations[row.restoration] }}</p>{% endif %}</td>
+      <td>{{ row.next_due_on or 'Sin programar' }}</td>
+      <td>{{ row.author.username }}<br>{{ row.created_at }}</td>
+    </tr>
+    {% else %}<tr><td colspan="5">Sin registros.</td></tr>{% endfor %}
+  </table>
+</section>
+{% endfor %}
+{% endif %}

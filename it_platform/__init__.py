@@ -50,6 +50,8 @@ def create_app(test_config=None):
     from .vault import bp as vault
     app.register_blueprint(auth)
     app.register_blueprint(main)
+    from .asset_services import bp as asset_services
+    app.register_blueprint(asset_services)
     app.register_blueprint(tickets)
     app.register_blueprint(vault)
     from .vault_cli import register
