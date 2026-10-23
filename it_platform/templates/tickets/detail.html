@@ -2,7 +2,7 @@
 {% block content %}
 <p class="eyebrow">{{ ticket.folio }}</p><h1>{{ ticket.subject }}</h1>
 <section class="card"><span class="badge">{{ ticket_statuses[ticket.status] }}</span><p>{{ ticket.category }} · Prioridad {{ ticket_priorities[ticket.priority] }} · Solicitante {{ ticket.requester.username }}</p><p class="muted">Creado: {{ ticket.created_at }} UTC · Responsable: {{ ticket.assigned_to.username if ticket.assigned_to else 'Sin asignar' }}</p>
-{% if ticket.asset %}<p>Equipo: {{ ticket.asset.code }}</p>{% endif %}<p class="pre">{{ ticket.description }}</p>
+{% if ticket.asset %}<p>Equipo: {{ ticket.asset.display_name }}</p>{% endif %}<p class="pre">{{ ticket.description }}</p>
 {% if ticket.solution %}<h2>Solución</h2><p class="pre">{{ ticket.solution }}</p>{% endif %}</section>
 {% if is_it %}<section class="card"><h2>Gestión de IT</h2><form method="post" class="form-grid" action="{{ url_for('tickets.manage', ticket_id=ticket.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="revision" value="{{ ticket.revision }}">
 <label>Responsable<select name="assigned_to_id"><option value="">Sin asignar</option>{% for user in technicians %}<option value="{{ user.id }}" {% if ticket.assigned_to_id == user.id %}selected{% endif %}>{{ user.username }}</option>{% endfor %}</select></label>

@@ -121,3 +121,28 @@ del proyecto con su configuración habitual:
 Este comando crea la tabla nueva `asset_service` y conserva las tablas y datos existentes.
 Después reiniciar el servicio. No requiere paquetes adicionales. Registrar un respaldo
 no copia archivos ni ejecuta respaldos: documenta la actividad que IT realizó.
+
+## Alias de equipos
+
+El alias se captura al registrar o editar un equipo (hasta 120 caracteres). Se muestra primero,
+seguido del código para distinguir equipos con alias iguales, en el inventario, expediente y
+selectores de credenciales y tickets. Para asignarlo, abre el equipo por su alias desde el inventario.
+Los equipos sin alias conservan su código y la búsqueda también admite alias.
+
+En instalaciones existentes, antes de reiniciar el servicio ejecuta:
+
+```powershell
+.\.venv\Scripts\python.exe -m flask --app wsgi upgrade-db
+```
+
+Este comando agrega únicamente la columna faltante a `asset`, conserva los datos y puede repetirse.
+Las instalaciones nuevas reciben la columna mediante `init-db`.
+
+## Código automático de equipos
+
+Los equipos nuevos reciben su código al guardar: después de `0007` se asigna `0008`,
+luego `0009`, etc. Se conservan al menos cuatro dígitos. Los códigos históricos no
+numéricos no participan en la secuencia. El contador se bloquea durante el registro
+para serializar altas simultáneas y se revierte si falla el guardado.
+En instalaciones existentes ejecutar `python -m flask --app wsgi upgrade-db` antes
+de reiniciar el servicio para crear la tabla `asset_code_counter`.

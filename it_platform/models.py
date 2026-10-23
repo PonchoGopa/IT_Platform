@@ -20,9 +20,15 @@ class User(db.Model):
     locked_until = db.Column(db.DateTime)
 
 
+class AssetCodeCounter(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    last_number = db.Column(db.BigInteger, nullable=False, default=0)
+
+
 class Asset(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(50), unique=True, nullable=False)
+    alias = db.Column(db.String(120), nullable=False, default="", server_default="")
     serial = db.Column(db.String(100), unique=True)
     category = db.Column(db.String(40), nullable=False)
     brand = db.Column(db.String(80), default="")
@@ -31,6 +37,11 @@ class Asset(db.Model):
     location = db.Column(db.String(120), default="")
     status = db.Column(db.String(30), nullable=False, default="available")
     created_at = db.Column(db.DateTime, default=now, nullable=False)
+
+
+    @property
+    def display_name(self):
+        return f"{self.alias} ({self.code})" if self.alias else self.code
 
 
 class AssetService(db.Model):

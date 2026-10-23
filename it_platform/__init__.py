@@ -72,6 +72,22 @@ def create_app(test_config=None):
         db.create_all()
         click.echo("Tablas de IT Platform creadas.")
 
+    @app.cli.command("upgrade-db")
+    def upgrade_db():
+        """Apply additive schema updates to existing platform tables."""
+        from sqlalchemy import inspect, text
+        if not inspect(db.engine).has_table("asset"):
+            raise click.ClickException("Primero ejecuta init-db.")
+        from .models import AssetCodeCounter
+        AssetCodeCounter.__table__.create(db.engine, checkfirst=True)
+        columns = {column["name"] for column in inspect(db.engine).get_columns("asset")}
+        if "alias" not in columns:
+            with db.engine.begin() as connection:
+                connection.execute(text("ALTER TABLE asset ADD COLUMN alias VARCHAR(120) NOT NULL DEFAULT ''"))
+            click.echo("Campo alias agregado a los equipos.")
+        else:
+            click.echo("El esquema ya está actualizado.")
+
     @app.cli.command("create-user")
     @click.option("--username", prompt=True)
     @click.option("--role", type=click.Choice(["admin", "technician", "requester"]), default="requester")

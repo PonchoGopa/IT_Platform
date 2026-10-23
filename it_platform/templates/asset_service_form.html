@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<p class="eyebrow">EXPEDIENTE DEL EQUIPO · {{ asset.code }}</p>
+<p class="eyebrow">EXPEDIENTE DEL EQUIPO · {{ asset.display_name }}</p>
 <h1>Registrar {{ service_kinds[kind]|lower }}</h1>
 <form method="post" class="card form-grid">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

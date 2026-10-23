@@ -3,7 +3,7 @@ from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from .auth import require_roles
 from .employees import DirectoryUnavailable, employee_options, lookup
-from .models import Asset, AssetService, Assignment, Audit, Ticket, User, audit, db, now
+from .models import AssetCodeCounter, Asset, AssetService, Assignment, Audit, Ticket, User, audit, db, now
 
 bp = Blueprint("main", __name__)
 CATEGORIES = ["Computadora", "Laptop", "Monitor", "Impresora", "Tablet", "Red", "Otro"]
@@ -46,7 +46,7 @@ def assets():
         stmt = stmt.join(Assignment).where(Assignment.employee_no == g.user.employee_no,
                                           Assignment.ended_at.is_(None)) if g.user.employee_no else stmt.where(db.false())
     if query:
-        stmt = stmt.where(or_(Asset.code.contains(query), Asset.serial.contains(query), Asset.model.contains(query)))
+        stmt = stmt.where(or_(Asset.alias.contains(query), Asset.code.contains(query), Asset.serial.contains(query), Asset.model.contains(query)))
     rows = db.session.scalars(stmt.order_by(Asset.code).limit(200)).all()
     return render_template("assets.html", rows=rows, query=query)
 
@@ -63,24 +63,45 @@ def asset_edit(asset_id):
     return save_asset_form(db.get_or_404(Asset, asset_id))
 
 
+def next_asset_code():
+    # Initialize and lock one shared row, even when the first requests overlap.
+    table = AssetCodeCounter.__table__
+    if db.session.get_bind().dialect.name == "mysql":
+        from sqlalchemy.dialects.mysql import insert
+        stmt = insert(table).values(id=1, last_number=0)
+        db.session.execute(stmt.on_duplicate_key_update(id=table.c.id))
+    else:
+        from sqlalchemy.dialects.sqlite import insert
+        db.session.execute(insert(table).values(id=1, last_number=0).on_conflict_do_nothing())
+    counter = db.session.scalar(db.select(AssetCodeCounter).where(
+        AssetCodeCounter.id == 1).with_for_update())
+    codes = db.session.scalars(db.select(Asset.code)).all()
+    highest = max((int(code) for code in codes if code.isascii() and code.isdecimal()), default=0)
+    counter.last_number = max(counter.last_number, highest) + 1
+    return f"{counter.last_number:04d}"
+
+
 def save_asset_form(asset=None):
     if request.method == "POST":
-        fields = {k: request.form.get(k, "").strip() for k in ("code", "serial", "category", "brand", "model", "specs", "location")}
-        limits = {"code": 50, "serial": 100, "brand": 80, "model": 100, "specs": 5000, "location": 120}
-        if not fields["code"] or fields["category"] not in CATEGORIES or any(len(fields[k]) > limit for k, limit in limits.items()):
+        fields = {k: request.form.get(k, "").strip() for k in ("code", "alias", "serial", "category", "brand", "model", "specs", "location")}
+        if asset is None:
+            fields["code"] = ""  # New codes are assigned by the server when saving.
+        limits = {"alias": 120, "code": 50, "serial": 100, "brand": 80, "model": 100, "specs": 5000, "location": 120}
+        if (asset is not None and not fields["code"]) or fields["category"] not in CATEGORIES or any(len(fields[k]) > limit for k, limit in limits.items()):
             flash("Revisa los campos y sus longitudes.", "error")
         else:
             fields["serial"] = fields["serial"] or None
             creating = asset is None
             changed = []
-            if creating:
-                asset = Asset(**fields)
-                db.session.add(asset)
-            else:
+            if not creating:
                 changed = [key for key, value in fields.items() if getattr(asset, key) != value]
                 for key, value in fields.items():
                     setattr(asset, key, value)
             try:
+                if creating:
+                    fields["code"] = next_asset_code()
+                    asset = Asset(**fields)
+                    db.session.add(asset)
                 db.session.flush()
                 if creating:
                     audit("asset.create", asset.id)

@@ -174,8 +174,10 @@ def index():
     if query:
         stmt = stmt.where(Credential.title.contains(query, autoescape=True))
     rows = db.session.scalars(stmt.order_by(Credential.title).limit(200)).all()
+    employees, _ = employee_options() if any(row.owner_employee_no for row in rows) else ([], None)
+    employee_names = {str(employee["employee_no"]): employee["name"] for employee in employees}
     return render_template("vault/index.html", rows=rows, query=query, archived=archived,
-                           vault_it=privileged(), asset_id=asset_id)
+                           vault_it=privileged(), asset_id=asset_id, employee_names=employee_names)
 
 
 def available_assets():
