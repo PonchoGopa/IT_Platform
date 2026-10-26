@@ -1,5 +1,51 @@
 <!doctype html>
-<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>IT Platform</title><link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}"></head>
-<body><aside><a class="brand" href="{{ url_for('main.home') }}">IT<span>Platform</span></a><p class="muted">Administración de tecnología</p>
-{% if g.user %}<nav><a href="{{ url_for('vault.index') }}">Credenciales</a><a href="{{ url_for('tickets.index') }}">Tickets</a><a href="{{ url_for('main.home') }}">Inicio</a><a href="{{ url_for('main.assets') }}">{{ 'Inventario' if is_it else 'Mis equipos' }}</a>{% if is_it %}<a href="{{ url_for('main.employees') }}">Empleados</a>{% endif %}{% if g.user.role == 'admin' %}<a href="{{ url_for('main.audit_log') }}">Auditoría</a>{% endif %}</nav><footer><strong>{{ g.user.username }}</strong><p>{{ g.user.role }}</p><form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="secondary">Cerrar sesión</button></form></footer>{% endif %}</aside>
-<main>{% for category, message in get_flashed_messages(with_categories=true) %}<div role="alert" class="notice {{ category }}">{{ message }}</div>{% endfor %}{% block content %}{% endblock %}</main></body></html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f9fc">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='icon.png') }}">
+  <title>IT Platform</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css', v='20261026') }}">
+</head>
+<body class="{{ 'authenticated' if g.user else 'guest' }}">
+<aside class="sidebar">
+  <a class="brand" href="{{ url_for('main.home') }}" aria-label="IT Platform · Inicio">
+    <img class="brand-logo" src="{{ url_for('static', filename='icon.png') }}" alt="KI USA" width="44" height="44">
+    <span class="brand-name">IT Platform<small>WORKSPACE</small></span>
+  </a>
+  <p class="sidebar-caption">Administración de tecnología</p>
+  {% if g.user %}
+  {% set section = request.blueprint %}
+  <nav aria-label="Navegación principal">
+    <p class="nav-label">ESPACIO DE TRABAJO</p>
+    {% for endpoint, label, symbol, active in [
+      ('main.home', 'Inicio', '◈', request.endpoint == 'main.home'),
+      ('main.assets', 'Inventario' if is_it else 'Mis equipos', '▦', request.endpoint in ['main.assets', 'main.asset_detail', 'main.asset_new', 'main.asset_edit', 'main.assign', 'main.return_asset', 'main.asset_status'] or section == 'asset_services'),
+      ('vault.index', 'Credenciales', '◇', section == 'vault'),
+      ('tickets.index', 'Tickets', '◎', section == 'tickets')
+    ] %}
+    <a href="{{ url_for(endpoint) }}" {% if active %}class="active" aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">{{ symbol }}</span>{{ label }}</a>
+    {% endfor %}
+    {% if is_it %}<a href="{{ url_for('reports.index') }}" {% if section == 'reports' %}class="active" aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">&#9636;</span>Reportes</a>{% endif %}
+    {% if is_it %}<p class="nav-label">ADMINISTRACIÓN</p><a href="{{ url_for('main.employees') }}" {% if request.endpoint == 'main.employees' %}class="active" aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">▤</span>Empleados</a>{% endif %}
+    {% if g.user.role == 'admin' %}<a href="{{ url_for('main.audit_log') }}" {% if request.endpoint == 'main.audit_log' %}class="active" aria-current="page"{% endif %}><span class="nav-icon" aria-hidden="true">◷</span>Auditoría</a>{% endif %}
+  </nav>
+  <footer class="account">
+    <div class="account-info"><span class="avatar" aria-hidden="true">{{ g.user.username[:1]|upper }}</span><div><strong>{{ g.user.username }}</strong><p>{{ {'admin': 'Administrador', 'technician': 'Soporte IT', 'requester': 'Usuario'}.get(g.user.role, g.user.role) }}</p></div></div>
+    <form method="post" action="{{ url_for('auth.logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="secondary">Cerrar sesión <span aria-hidden="true">↗</span></button></form>
+  </footer>
+  {% else %}
+  <div class="welcome-panel"><p class="eyebrow">TU ESPACIO DE IT</p><h2>Tecnología.<br>Orden.<br>Simplicidad.</h2><p>Equipos, soporte y accesos en un solo lugar.</p></div>
+  <p class="sidebar-caption sidebar-bottom">IT Platform · Acceso interno</p>
+  {% endif %}
+</aside>
+<main id="main-content">
+  {% if g.user %}<div class="workspace-bar"><span>Workspace <span class="bar-divider">/</span> <strong>{{ {'vault': 'Credenciales', 'tickets': 'Soporte', 'asset_services': 'Equipos', 'reports': 'Reportes'}.get(request.blueprint, 'Administración IT') }}</strong></span><span class="workspace-label"><span class="status-dot" aria-hidden="true"></span> Portal interno</span></div>{% endif %}
+  <div class="page-content">
+  {% for category, message in get_flashed_messages(with_categories=true) %}<div role="alert" class="notice {{ category }}">{{ message }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+  </div>
+</main>
+</body>
+</html>

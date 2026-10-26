@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<p class="eyebrow">CONSULTA Y SEGUIMIENTO</p>
+<h1>Reportes</h1>
+<p class="muted">Consulta el estado y los servicios registrados de tus equipos.</p>
+<section class="card">
+  <h2>Últimos mantenimientos</h2>
+  <p class="muted">Revisa el último mantenimiento de cada equipo, su resultado y la próxima fecha programada. Identifica los equipos sin mantenimiento registrado.</p>
+  <a class="button" href="{{ url_for('reports.maintenance') }}">Consultar reporte</a>
+</section>
+{% endblock %}

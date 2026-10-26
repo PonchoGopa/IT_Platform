@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<header><div><p class="eyebrow">REPORTES / EQUIPOS</p><h1>Últimos mantenimientos</h1></div><a class="button secondary" href="{{ url_for('reports.index') }}">Ver reportes</a></header>
+<p class="muted">Último registro por equipo según la fecha realizada. Incluye todos los equipos, incluso los dados de baja y los que aún no tienen mantenimiento.</p>
+<div class="cards">
+  {% for label, value in [('Equipos', summary.total), ('Sin mantenimiento', summary.missing), ('Próxima fecha vencida', summary.overdue), ('Próxima fecha vigente', summary.scheduled)] %}
+  <section class="card stat-card"><p class="muted">{{ label }}</p><strong class="metric">{{ value }}</strong></section>
+  {% endfor %}
+</div>
+<form class="search" method="get">
+  <input name="q" value="{{ query }}" placeholder="Alias, código, serie o ubicación" aria-label="Buscar equipos">
+  <select name="status" aria-label="Filtrar seguimiento">
+    {% for key, label in [('', 'Todos'), ('missing', 'Sin mantenimiento'), ('overdue', 'Próxima fecha vencida'), ('scheduled', 'Próxima fecha vigente'), ('unscheduled', 'Sin próxima fecha')] %}
+    <option value="{{ key }}" {% if status == key %}selected{% endif %}>{{ label }}</option>
+    {% endfor %}
+  </select>
+  <button>Filtrar</button>
+  {% if query or status %}<a href="{{ url_for('reports.maintenance') }}">Limpiar</a>{% endif %}
+</form>
+<p class="muted">{{ total }} equipo(s) en el reporte. Resumen calculado sobre la búsqueda, antes del filtro de seguimiento.</p>
+<section class="card table">
+<table>
+  <thead><tr><th>Equipo / ubicación</th><th>Estado del equipo</th><th>Último mantenimiento</th><th>Tipo / responsable</th><th>Resultado</th><th>Próxima fecha</th><th>Seguimiento</th><th>Detalle</th></tr></thead>
+  <tbody>
+  {% for asset, service in rows %}
+  <tr>
+    <td><a href="{{ url_for('main.asset_detail', asset_id=asset.id) }}">{{ asset.display_name }}</a><br><span class="muted">{{ asset.location or 'Sin ubicación' }}</span></td>
+    <td>{{ statuses.get(asset.status, asset.status) }}</td>
+    {% if service %}
+    <td>{{ service.performed_on.strftime('%d/%m/%Y') }}<br><span class="muted">{{ (today - service.performed_on).days }} días transcurridos</span></td>
+    <td>{{ service_types['maintenance'].get(service.service_type, service.service_type) }}<br><span class="muted">{{ service.responsible }}</span></td>
+    <td><span class="badge {% if service.result == 'failed' %}badge-danger{% elif service.result == 'partial' %}badge-warning{% endif %}">{{ service_results.get(service.result, service.result) }}</span></td>
+    <td>{{ service.next_due_on.strftime('%d/%m/%Y') if service.next_due_on else 'Sin programar' }}</td>
+    <td>{% if not service.next_due_on %}<span class="badge badge-neutral">Sin próxima fecha</span>{% elif service.next_due_on < today %}<span class="badge badge-danger">Vencido</span>{% elif service.next_due_on == today %}<span class="badge badge-warning">Para hoy</span>{% else %}<span class="badge">Programado</span>{% endif %}</td>
+    <td><details><summary>Ver detalle</summary><p class="pre">{{ service.description }}</p></details></td>
+    {% else %}
+    <td colspan="6"><span class="badge badge-neutral">Sin mantenimiento registrado</span></td>
+    {% endif %}
+  </tr>
+  {% else %}<tr><td colspan="8">No hay equipos que coincidan con los filtros.</td></tr>{% endfor %}
+  </tbody>
+</table>
+</section>
+<div class="report-pagination">
+  <span class="muted">Página {{ page }} de {{ pages }} · Hasta 50 equipos por página</span>
+  <div>{% if page > 1 %}<a class="button secondary" href="{{ url_for('reports.maintenance', q=query, status=status, page=page-1) }}">Anterior</a>{% endif %}
+  {% if page < pages %}<a class="button secondary" href="{{ url_for('reports.maintenance', q=query, status=status, page=page+1) }}">Siguiente</a>{% endif %}</div>
+</div>
+{% endblock %}

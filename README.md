@@ -146,3 +146,20 @@ numéricos no participan en la secuencia. El contador se bloquea durante el regi
 para serializar altas simultáneas y se revierte si falla el guardado.
 En instalaciones existentes ejecutar `python -m flask --app wsgi upgrade-db` antes
 de reiniciar el servicio para crear la tabla `asset_code_counter`.
+
+## Reportes de mantenimiento
+
+La sección **Reportes > Últimos mantenimientos** está disponible para administradores
+y técnicos de IT. Muestra una fila por equipo, incluyendo los dados de baja y los que
+no tienen mantenimiento. El último registro se determina por la fecha realizada;
+si hay varios en la misma fecha se toma el último capturado. Los respaldos no
+participan en este reporte. Se muestra el resultado incluso si fue parcial o fallido.
+
+Permite buscar por alias, código, serie o ubicación y filtrar por seguimiento.
+Una próxima fecha anterior a hoy se marca como vencida; la fecha de hoy aparece
+como "Para hoy". No se estima una periodicidad cuando no hay próxima fecha.
+El resumen corresponde a la búsqueda antes del filtro de seguimiento.
+Los resultados se muestran en páginas de 50 equipos.
+
+No requiere cambios en la base de datos ni paquetes adicionales. Reinicia el
+servicio después de actualizar el código.

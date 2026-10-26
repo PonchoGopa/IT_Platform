@@ -54,6 +54,8 @@ def create_app(test_config=None):
     app.register_blueprint(asset_services)
     app.register_blueprint(tickets)
     app.register_blueprint(vault)
+    from .reports import bp as reports
+    app.register_blueprint(reports)
     from .vault_cli import register
     register(app)
 
