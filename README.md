@@ -163,3 +163,16 @@ Los resultados se muestran en páginas de 50 equipos.
 
 No requiere cambios en la base de datos ni paquetes adicionales. Reinicia el
 servicio después de actualizar el código.
+
+## Categorías y tipos de inventario
+
+Cada tipo pertenece a una categoría general: Equipo de cómputo (Computadora,
+Laptop y Tablet), Impresoras (Impresora), Comunicación (Red, Teléfono y Radio),
+Periféricos (Monitor) y Otros (Otro). Al registrar o editar se selecciona primero
+la categoría y después el tipo. El inventario permite filtrar la categoría junto
+con la búsqueda por texto. Los usuarios conservan acceso solo a sus equipos.
+
+La categoría general se deriva del tipo, por lo que los registros existentes
+quedan clasificados automáticamente y no se requiere migración de base de datos.
+Los tipos históricos desconocidos se muestran en Otros. Reinicia el servicio
+después de actualizar el código.

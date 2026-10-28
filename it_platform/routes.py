@@ -5,14 +5,16 @@ from .auth import require_roles
 from .employees import DirectoryUnavailable, employee_options, lookup
 from .models import AssetCodeCounter, Asset, AssetService, Assignment, Audit, Ticket, User, audit, db, now
 
+from .asset_categories import ASSET_GROUPS, ASSET_TYPES, group_for_type
+
 bp = Blueprint("main", __name__)
-CATEGORIES = ["Computadora", "Laptop", "Monitor", "Impresora", "Tablet", "Red", "Otro"]
+CATEGORIES = ASSET_TYPES
 STATUSES = {"available": "Disponible", "assigned": "Asignado", "repair": "En reparación", "retired": "Dado de baja"}
 
 
 @bp.app_context_processor
 def context():
-    return {"statuses": STATUSES, "categories": CATEGORIES,
+    return {"statuses": STATUSES, "categories": CATEGORIES, "asset_groups": ASSET_GROUPS, "group_for_type": group_for_type,
             "is_it": bool(g.user and g.user.role in ("admin", "technician"))}
 
 
@@ -41,14 +43,21 @@ def employees():
 @require_roles()
 def assets():
     query = request.args.get("q", "").strip()[:100]
+    selected_group = request.args.get("group", "")
+    if selected_group and selected_group not in ASSET_GROUPS:
+        abort(400)
     stmt = db.select(Asset)
+    if selected_group:
+        types = ASSET_GROUPS[selected_group]["types"]
+        stmt = stmt.where(Asset.category.in_(types)) if selected_group != "other" else stmt.where(
+            or_(Asset.category.in_(types), Asset.category.not_in(ASSET_TYPES)))
     if g.user.role == "requester":
         stmt = stmt.join(Assignment).where(Assignment.employee_no == g.user.employee_no,
                                           Assignment.ended_at.is_(None)) if g.user.employee_no else stmt.where(db.false())
     if query:
         stmt = stmt.where(or_(Asset.alias.contains(query), Asset.code.contains(query), Asset.serial.contains(query), Asset.model.contains(query)))
     rows = db.session.scalars(stmt.order_by(Asset.code).limit(200)).all()
-    return render_template("assets.html", rows=rows, query=query)
+    return render_template("assets.html", rows=rows, query=query, selected_group=selected_group)
 
 
 @bp.route("/assets/new", methods=["GET", "POST"])
@@ -87,7 +96,11 @@ def save_asset_form(asset=None):
         if asset is None:
             fields["code"] = ""  # New codes are assigned by the server when saving.
         limits = {"alias": 120, "code": 50, "serial": 100, "brand": 80, "model": 100, "specs": 5000, "location": 120}
-        if (asset is not None and not fields["code"]) or fields["category"] not in CATEGORIES or any(len(fields[k]) > limit for k, limit in limits.items()):
+        selected_group = request.form.get("asset_group", "")
+        group_mismatch = selected_group and (
+            selected_group not in ASSET_GROUPS or
+            fields["category"] not in ASSET_GROUPS[selected_group]["types"])
+        if group_mismatch or (asset is not None and not fields["code"]) or fields["category"] not in CATEGORIES or any(len(fields[k]) > limit for k, limit in limits.items()):
             flash("Revisa los campos y sus longitudes.", "error")
         else:
             fields["serial"] = fields["serial"] or None

@@ -148,3 +148,7 @@ button:disabled, select:disabled { opacity: .6; cursor: not-allowed; }
 .report-pagination { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
 details summary { cursor: pointer; color: var(--accent); white-space: nowrap; }
 details .pre { min-width: 200px; max-width: 380px; }
+
+.page-navigation { margin-bottom: 22px; }
+.back-button { display: inline-flex; align-items: center; gap: 8px; }
+.back-button span { font-size: 18px; line-height: 1; }

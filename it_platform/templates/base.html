@@ -6,7 +6,8 @@
   <meta name="theme-color" content="#f7f9fc">
   <link rel="icon" type="image/png" href="{{ url_for('static', filename='icon.png') }}">
   <title>IT Platform</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css', v='20261026') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css', v='20261028') }}">
+  <script src="{{ url_for('static', filename='navigation.js', v='20261028') }}" defer></script>
 </head>
 <body class="{{ 'authenticated' if g.user else 'guest' }}">
 <aside class="sidebar">
@@ -43,6 +44,11 @@
 <main id="main-content">
   {% if g.user %}<div class="workspace-bar"><span>Workspace <span class="bar-divider">/</span> <strong>{{ {'vault': 'Credenciales', 'tickets': 'Soporte', 'asset_services': 'Equipos', 'reports': 'Reportes'}.get(request.blueprint, 'Administración IT') }}</strong></span><span class="workspace-label"><span class="status-dot" aria-hidden="true"></span> Portal interno</span></div>{% endif %}
   <div class="page-content">
+  {% if g.user %}
+  <div class="page-navigation">
+    <a class="button secondary back-button" href="{{ url_for('main.home') }}" data-back-link aria-label="Volver a la p&#225;gina anterior"><span aria-hidden="true">&#8592;</span> Volver</a>
+  </div>
+  {% endif %}
   {% for category, message in get_flashed_messages(with_categories=true) %}<div role="alert" class="notice {{ category }}">{{ message }}</div>{% endfor %}
   {% block content %}{% endblock %}
   </div>
